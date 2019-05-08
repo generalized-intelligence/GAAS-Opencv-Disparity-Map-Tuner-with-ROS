@@ -11,16 +11,7 @@ int main(int argc, char *argv[])
     QApplication application(argc, argv);
     MainWindow w;
 
-
     w.show();
-
-
-//    while(ros::ok())
-//    {
-////        //ros::spin();
-//        ros::spinOnce;
-//        rate.sleep();
-//    }
 
     return application.exec();
 }
