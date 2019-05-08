@@ -1,3 +1,30 @@
+# GAAS Opencv Disparity Map Tuner with ROS
+
+    Working In Progress
+
+## Default Topics
+    
+    you have to modify them in .CPP manually for now
+    left image topic : /mynteye/left/image_rect
+    right image topic: /mynteye/right/image_rect
+
+
+## To Build
+
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+
+## To Use
+    
+    1. play a bag containing left and right images topics 
+    2. launch roscore (if you haven't)
+    3. ./bin/run
+
+
+
 StereoCorrespondenceBM Tuner
 ============================
 

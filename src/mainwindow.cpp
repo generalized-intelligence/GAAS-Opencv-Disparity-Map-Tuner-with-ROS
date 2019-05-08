@@ -1,43 +1,230 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    
+    int RangeOfDisparity = 16;
+    int SizeOfBlockWindow = 7;
+    bmState = cv::StereoBM::create(RangeOfDisparity, SizeOfBlockWindow);
 
     // the default values used in OpenCV are defined here:
     // https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/stereobm.cpp
-    bmState.state->preFilterSize = 41;  // must be an odd between 5 and 255
-    bmState.state->preFilterCap = 31;  // must be within 1 and 63
-    bmState.state->SADWindowSize = 41;  // must be odd, be within 5..255 and be not larger than image width or height
-    bmState.state->minDisparity = -64;
-    bmState.state->numberOfDisparities = 128;  // must be > 0 and divisible by 16
-    bmState.state->textureThreshold = 10;  // must be non-negative
-    bmState.state->uniquenessRatio = 15;  // must be non-negative
-    bmState.state->speckleWindowSize = 0;
-    bmState.state->speckleRange = 0;
-    bmState.state->disp12MaxDiff = -1;
 
     // we override the default values defined in the UI file with Qt Designer
     // to the ones defined above
-    ui->horizontalSlider_pre_filter_size->setValue(bmState.state->preFilterSize);
-    ui->horizontalSlider_pre_filter_cap->setValue(bmState.state->preFilterCap);
-    ui->horizontalSlider_SAD_window_size->setValue(bmState.state->SADWindowSize);
-    ui->horizontalSlider_min_disparity->setValue(bmState.state->minDisparity);
-    ui->horizontalSlider_num_of_disparity->setValue(bmState.state->numberOfDisparities);
-    ui->horizontalSlider_texture_threshold->setValue(bmState.state->textureThreshold);
-    ui->horizontalSlider_uniqueness_ratio->setValue(bmState.state->uniquenessRatio);
-    ui->horizontalSlider_speckle_window_size->setValue(bmState.state->speckleWindowSize);
-    ui->horizontalSlider_speckle_range->setValue(bmState.state->speckleRange);
-    ui->horizontalSlider_disp_12_max_diff->setValue(bmState.state->disp12MaxDiff);
+    int preFilterSize = 41;
+    int preFilterCap = 31;
+    int minDisparity= -64;
+    int textureThreshold = 10;
+    int uniquenessRatio = 15;
+    int speckleWindowSize = 0;
+    int speckleRange = 0;
+    int disp12MaxDiff = -1;
+
+    bmState->setPreFilterSize (preFilterSize);  // must be an odd between 5 and 255
+    bmState->setPreFilterCap (preFilterCap);  // must be within 1 and 63
+    //bmState->setSADWindowSize (41);  // must be odd, be within 5..255 and be not larger than image width or height
+    bmState->setMinDisparity (minDisparity);
+    //bmState->setNumberOfDisparities(128);  // must be > 0 and divisible by 16
+    bmState->setTextureThreshold(textureThreshold);  // must be non-negative
+    bmState->setUniquenessRatio (uniquenessRatio);  // must be non-negative
+    bmState->setSpeckleWindowSize(speckleWindowSize);
+    bmState->setSpeckleRange (speckleRange);
+    bmState->setDisp12MaxDiff(disp12MaxDiff);
+
+    ui->horizontalSlider_pre_filter_size->setValue(preFilterSize);
+    bmState->setPreFilterSize (preFilterSize);
+
+    ui->horizontalSlider_pre_filter_cap->setValue(preFilterCap);
+    bmState->setPreFilterCap(preFilterCap);
+
+    //ui->horizontalSlider_SAD_window_size->setValue(bmState->state->SADWindowSize);
+    ui->horizontalSlider_min_disparity->setValue(minDisparity);
+    bmState->setMinDisparity(minDisparity);
+
+    //ui->horizontalSlider_num_of_disparity->setValue(bmState->state->numberOfDisparities);
+    ui->horizontalSlider_texture_threshold->setValue(textureThreshold);
+    bmState->setTextureThreshold(textureThreshold);
+
+    ui->horizontalSlider_uniqueness_ratio->setValue(uniquenessRatio);
+    bmState->setUniquenessRatio (uniquenessRatio);
+
+    ui->horizontalSlider_speckle_window_size->setValue(speckleWindowSize);
+    bmState->setSpeckleWindowSize(speckleWindowSize);
+
+    ui->horizontalSlider_speckle_range->setValue(speckleRange);
+    bmState->setSpeckleRange (speckleRange);
+
+    ui->horizontalSlider_disp_12_max_diff->setValue(disp12MaxDiff);
+    bmState->setDisp12MaxDiff(disp12MaxDiff);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+//void MainWindow::ros_init()
+//{
+//    cout<<"subscribed to left image topic: "<<"/mynteye/left/image_rect"<<endl;
+//    cout<<"sbuscribed to right image topic: "<<"/mynteye/right/image_rect"<<endl;
+//
+////    left_sub = nh.subscribe("/mynteye/left/image_rect", 1000, &MainWindow::FetchLeftImage, this);
+////    left_sub = nh.subscribe("/mynteye/right/image_rect", 1000, &MainWindow::FetchRightImage, this);
+//
+//    message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, "/mynteye/left/image_rect", 10);
+//    message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, "/mynteye/right/image_rect", 10);
+//
+//    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
+//    message_filters::Synchronizer<sync_pol> sync(sync_pol(10), left_sub, right_sub);
+//    sync.setMaxIntervalDuration(ros::Duration(0.01));
+//    sync.registerCallback(boost::bind(&MainWindow::FetchImages, _1, _2));
+//
+//
+//    cout<<"spining"<<endl;
+//
+//    ros::spin();
+//
+//    cout<<"after spining"<<endl;
+//}
+
+
+void MainWindow::ros_init()
+{
+    cout<<"subscribed to left image topic: "<<"/mynteye/left/image_rect"<<endl;
+    cout<<"sbuscribed to right image topic: "<<"/mynteye/right/image_rect"<<endl;
+
+//    left_sub = nh.subscribe("/mynteye/left/image_rect", 1000, &MainWindow::FetchLeftImage, this);
+//    left_sub = nh.subscribe("/mynteye/right/image_rect", 1000, &MainWindow::FetchRightImage, this);
+
+    string left_topic = "/mynteye/left/image_rect";
+    string right_topic = "/mynteye/right/image_rect";
+
+    message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, left_topic, 10);
+    message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, right_topic, 10);
+
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
+    message_filters::Synchronizer<sync_pol> sync(sync_pol(10), left_sub, right_sub);
+    sync.setMaxIntervalDuration(ros::Duration(0.01));
+    sync.registerCallback(boost::bind(&MainWindow::FetchImages, this, _1, _2));
+
+    cout<<"spining"<<endl;
+
+    ros::spin();
+
+    cout<<"after spining"<<endl;
+}
+
+
+void MainWindow::FetchLeftImage(const sensor_msgs::ImageConstPtr& msgLeft)
+{
+    try
+    {
+        cv_ptrLeft = cv_bridge::toCvShare(msgLeft);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    
+    cout<<"subscribing images from left image topic."<<endl;
+
+    left_image = cv_ptrLeft->image;
+
+
+    // load image
+
+    // QPixmap::fromImage(QImage((unsigned char*) mat.data, mat.cols, mat.rows, QImage::Format_RGB888));
+    // some computation to resize the image if it is too big to fit in the GUI
+    QPixmap left_pixmap = QPixmap::fromImage(QImage((unsigned char*) left_image.data, left_image.cols, left_image.rows, QImage::Format_RGB888));
+    int max_width  = std::min(ui->label_image_left->maximumWidth(), left_image.cols);
+    int max_height = std::min(ui->label_image_left->maximumHeight(), left_image.rows);
+    ui->label_image_left->setPixmap(left_pixmap.scaled(max_width, max_height, Qt::KeepAspectRatio));
+
+    set_SADWindowSize();  // the SAD window size parameter depends on the size of the image
+
+
+
+    cout<<"fetching left image succeed, start doing disparity map generation"<<endl;
+
+    if(!left_image.empty() && !right_image.empty())
+    {
+        compute_depth_map();
+    }
+}
+
+void MainWindow::FetchRightImage(const sensor_msgs::ImageConstPtr& msgRight)
+{
+    try
+    {
+        cv_ptrRight = cv_bridge::toCvShare(msgRight);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+    
+    cout<<"subscribing images."<<endl;
+
+    right_image = cv_ptrRight->image;
+
+
+    QPixmap right_pixmap = QPixmap::fromImage(QImage((unsigned char*) right_image.data, right_image.cols, right_image.rows, QImage::Format_Grayscale8));
+
+    int max_width  = std::min(ui->label_image_right->maximumWidth(), right_image.cols);
+    int max_height = std::min(ui->label_image_right->maximumHeight(), right_image.rows);
+    ui->label_image_right->setPixmap(right_pixmap.scaled(max_width, max_height, Qt::KeepAspectRatio));
+
+
+    set_SADWindowSize();  // the SAD window size parameter depends on the size of the image
+}
+
+
+void MainWindow::FetchImages(const sensor_msgs::ImageConstPtr& msgLeft, const sensor_msgs::ImageConstPtr& msgRight)
+{
+    try
+    {
+        cv_ptrLeft = cv_bridge::toCvShare(msgLeft);
+        cv_ptrRight = cv_bridge::toCvShare(msgRight);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    cout<<"subscribing images."<<endl;
+
+    left_image = cv_ptrLeft->image;
+    right_image = cv_ptrRight->image;
+
+    // load images
+    // some computation to resize the image if it is too big to fit in the GUI
+    // QPixmap::fromImage(QImage((unsigned char*) mat.data, mat.cols, mat.rows, QImage::Format_RGB888));
+    QPixmap left_pixmap = QPixmap::fromImage(QImage((unsigned char*) left_image.data, left_image.cols, left_image.rows, QImage::Format_Grayscale8));
+    int max_width_left  = std::min(ui->label_image_left->maximumWidth(), left_image.cols);
+    int max_height_left = std::min(ui->label_image_left->maximumHeight(), left_image.rows);
+    ui->label_image_left->setPixmap(left_pixmap.scaled(max_width_left, max_height_left, Qt::KeepAspectRatio));
+
+    QPixmap right_pixmap = QPixmap::fromImage(QImage((unsigned char*) right_image.data, right_image.cols, right_image.rows, QImage::Format_Grayscale8));
+    int max_width_right  = std::min(ui->label_image_right->maximumWidth(), right_image.cols);
+    int max_height_right = std::min(ui->label_image_right->maximumHeight(), right_image.rows);
+    ui->label_image_right->setPixmap(right_pixmap.scaled(max_width_right, max_height_right, Qt::KeepAspectRatio));
+
+    set_SADWindowSize();  // the SAD window size parameter depends on the size of the image
+
+    compute_depth_map();
+}
+
 
 // method called when the button to change the left image is clicked
 // we prompt the user to select an image, and we display it
@@ -127,7 +314,8 @@ void MainWindow::compute_depth_map() {
 
     // we compute the depth map
     cv::Mat disparity_16S;  // 16 bits, signed
-    bmState(left_image, right_image, disparity_16S);
+    bmState->compute(left_image, right_image, disparity_16S);
+    //bmState(left_image, right_image, disparity_16S);
 
     // we convert the depth map to a QPixmap, to display it in the QUI
     // first, we need to convert the disparity map to a more regular grayscale format
@@ -171,7 +359,7 @@ void MainWindow::on_horizontalSlider_pre_filter_size_valueChanged(int value)
         ui->horizontalSlider_pre_filter_size->setValue(value);
     }
 
-    bmState.state->preFilterSize = value;
+    bmState->setPreFilterSize(value);
     compute_depth_map();
 }
 
@@ -179,7 +367,7 @@ void MainWindow::on_horizontalSlider_pre_filter_size_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_pre_filter_cap_valueChanged(int value)
 {
-    bmState.state->preFilterCap = value;
+    bmState->setPreFilterCap(value);
     compute_depth_map();
 }
 
@@ -210,7 +398,7 @@ void MainWindow::on_horizontalSlider_SAD_window_size_valueChanged(int value)
         ui->horizontalSlider_SAD_window_size->setValue(value);
     }
 
-    bmState.state->SADWindowSize = value;
+    //bmState->state->SADWindowSize = value;
     compute_depth_map();
 }
 
@@ -218,7 +406,7 @@ void MainWindow::on_horizontalSlider_SAD_window_size_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_min_disparity_valueChanged(int value)
 {
-    bmState.state->minDisparity = value;
+    bmState->setMinDisparity(value);
     compute_depth_map();
 }
 
@@ -245,7 +433,7 @@ void MainWindow::set_num_of_disparity_slider_to_multiple_16(int value) {
         ui->horizontalSlider_num_of_disparity->setValue(value);
     }
 
-    bmState.state->numberOfDisparities = value;
+    //bmState->state->numberOfDisparities = value;
     compute_depth_map();
 }
 
@@ -253,7 +441,7 @@ void MainWindow::set_num_of_disparity_slider_to_multiple_16(int value) {
 
 void MainWindow::on_horizontalSlider_texture_threshold_valueChanged(int value)
 {
-    bmState.state->textureThreshold = value;
+    bmState->setTextureThreshold(value);
     compute_depth_map();
 }
 
@@ -261,7 +449,7 @@ void MainWindow::on_horizontalSlider_texture_threshold_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_uniqueness_ratio_valueChanged(int value)
 {
-    bmState.state->uniquenessRatio = value;
+    bmState->setUniquenessRatio(value);
     compute_depth_map();
 }
 
@@ -269,7 +457,7 @@ void MainWindow::on_horizontalSlider_uniqueness_ratio_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_speckle_window_size_valueChanged(int value)
 {
-    bmState.state->speckleWindowSize = value;
+    bmState->setSpeckleWindowSize(value);
     compute_depth_map();
 }
 
@@ -277,7 +465,7 @@ void MainWindow::on_horizontalSlider_speckle_window_size_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_speckle_range_valueChanged(int value)
 {
-    bmState.state->speckleRange = value;
+    bmState->setSpeckleRange(value);
     compute_depth_map();
 }
 
@@ -285,6 +473,17 @@ void MainWindow::on_horizontalSlider_speckle_range_valueChanged(int value)
 
 void MainWindow::on_horizontalSlider_disp_12_max_diff_valueChanged(int value)
 {
-    bmState.state->disp12MaxDiff = value;
+    bmState->setDisp12MaxDiff(value);
     compute_depth_map();
+}
+
+
+void MainWindow::show()
+{
+    QWidget::show();
+
+    std::thread ros_thread(&MainWindow::ros_init, this);
+    ros_thread.detach();
+//    ros::spin();
+
 }
