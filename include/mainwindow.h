@@ -44,6 +44,7 @@ public:
 
 private slots:
 
+
     void on_pushButton_left_clicked();
 
     void on_pushButton_right_clicked();
@@ -76,6 +77,9 @@ private slots:
 
     void FetchImages(const sensor_msgs::ImageConstPtr& msgLeft, const sensor_msgs::ImageConstPtr& msgRight);
 
+    void on_linetxt_left_textChanged(const QString &arg1);
+
+    void on_linetxt_right_textChanged(const QString &arg1);
 
 private:
     // the UI object, to access the UI elements created with Qt Designer
@@ -93,7 +97,8 @@ private:
     // functions to manage constraints on sliders
     void set_SADWindowSize();  // manage max value of SADWindowSize slider
     void set_num_of_disparity_slider_to_multiple_16(int position);
-
+    QString left_txtline;
+    QString right_txtline;
 
 public:
 

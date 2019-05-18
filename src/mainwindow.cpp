@@ -477,6 +477,20 @@ void MainWindow::on_horizontalSlider_disp_12_max_diff_valueChanged(int value)
     compute_depth_map();
 }
 
+//Data binding of linetxt_left&right to the QStrings
+//Do whatever you would like to do
+void MainWindow::on_linetxt_left_textChanged(const QString &arg1)
+{
+    this->left_txtline= ui->linetxt_left->text();
+    cout<<left_txtline.toStdString()<<endl;
+}
+
+void MainWindow::on_linetxt_right_textChanged(const QString &arg1)
+{
+    this->right_txtline=ui->linetxt_right->text();
+    cout<<right_txtline.toStdString()<<endl;
+}
+
 
 void MainWindow::show()
 {
